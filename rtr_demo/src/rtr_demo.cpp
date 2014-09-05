@@ -12,6 +12,30 @@
 #include <iostream>
 using namespace std;
 
+
+int OpenSubProcess(const char* chFileName,int* pZbcStdin,int* pZbcStdout)
+{
+	int fd_sub_in[2];		//use to cat the sub process's stdin
+	int fd_sub_out[2];
+	pipe(fd_sub_in);		//use to cat the sub process's stdout
+	pipe(fd_sub_out);
+
+	pid_t pid = fork();
+	if ( 0 == pid ) {
+		dup2(fd_sub_in[0],STDIN_FILENO);		//cat the STDIN to fd_sub_in
+		dup2(fd_sub_out[1],STDOUT_FILENO);		//cat the STDOUT to fd_sub_out
+		execlp(chFileName,"",(char*)0);			//run sub process
+	}
+	if ( pid < 0 ) {
+		return 0;
+	}
+
+	*pZbcStdin = fd_sub_in[0];
+	*pZbcStdout = fd_sub_out[1];
+
+	return 1;
+}
+
 int main() {
 
 	int fd_sub_in[2];		//use to cat the sub process's stdin
